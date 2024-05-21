@@ -86,9 +86,10 @@ class _GetAllRepositoryScreenListViewState
                       setState(() {
                         _searchedRepositories = getAllRepositoryModel
                             .where((repository) =>
-                            repository.name!
-                                .toLowerCase()
-                                .contains(value.toLowerCase()))
+                        repository.name!
+                            .toLowerCase()
+                            .contains(value.toLowerCase()) ||
+                            repository.language != null && repository.language!.toLowerCase().contains(value.toLowerCase())) // Check if language matches the search value
                             .toList();
                       });
                     },
@@ -120,6 +121,7 @@ class _GetAllRepositoryScreenListViewState
       itemBuilder: (context, index) => Padding(
         padding: const EdgeInsets.all(5.0),
         child: CardInformation(
+          language: _searchedRepositories[index].language.toString(),
           name: _searchedRepositories[index].name.toString(),
           image: _searchedRepositories[index].owner!.avatarUrl.toString(),
         ),
@@ -135,6 +137,7 @@ class _GetAllRepositoryScreenListViewState
       itemBuilder: (context, index) => Padding(
         padding: const EdgeInsets.all(5.0),
         child: CardInformation(
+          language: getAllRepositoryModel[index].language.toString(),
           name: getAllRepositoryModel[index].name.toString(),
           image: getAllRepositoryModel[index].owner!.avatarUrl.toString(),
         ),
