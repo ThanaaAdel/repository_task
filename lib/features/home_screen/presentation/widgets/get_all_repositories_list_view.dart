@@ -41,28 +41,21 @@ class _GetAllRepositoryScreenListViewState
     return BlocBuilder<GetAllRepositoryCubit, RepositoriesState>(
       builder: (context, state) {
         return state.when(
-          initial: () {
-            return const CircleIndicator();
-          },
-          loading: () {
-            return const CircleIndicator();
-          },
+          initial: () => const CircleIndicator(),
+          loading: () => const CircleIndicator(),
           success: (data) {
             final Repositories repositories = data;
             final List<Items> getAllRepositoryModel =
                 repositories.items ?? [];
             return successWidget(context, getAllRepositoryModel);
           },
-          error: (error) {
-            return setupErrorState(context, error);
-          },
+          error: (error) => setupErrorState(context, error),
         );
       },
     );
   }
 
-
-  SizedBox successWidget(
+  Widget successWidget(
       BuildContext context, List<Items> getAllRepositoryModel) {
     return SizedBox(
       height: context.screenHeight * 0.9,
@@ -74,25 +67,13 @@ class _GetAllRepositoryScreenListViewState
               children: [
                 Expanded(
                   child: SearchTextFormField(
-                    validator: (value) {
-                      return null;
-                    },
+                    validator: (_) => null,
                     controller: _searchController,
                     contentPadding: const EdgeInsets.all(0),
                     fillColorFromBackground: ColorsManager.mainWhite,
                     borderRadius: 16.sp,
                     prefixIcon: const Icon(Icons.search),
-                    onChange: (value) {
-                      setState(() {
-                        _searchedRepositories = getAllRepositoryModel
-                            .where((repository) =>
-                        repository.name!
-                            .toLowerCase()
-                            .contains(value.toLowerCase()) ||
-                            repository.language != null && repository.language!.toLowerCase().contains(value.toLowerCase())) // Check if language matches the search value
-                            .toList();
-                      });
-                    },
+                    onChange: _onSearchChanged,
                     hintText: "Search",
                   ),
                 ),
@@ -118,14 +99,7 @@ class _GetAllRepositoryScreenListViewState
       shrinkWrap: true,
       itemCount: _searchedRepositories.length,
       physics: const AlwaysScrollableScrollPhysics(),
-      itemBuilder: (context, index) => Padding(
-        padding: const EdgeInsets.all(5.0),
-        child: CardInformation(
-          language: _searchedRepositories[index].language.toString(),
-          name: _searchedRepositories[index].name.toString(),
-          image: _searchedRepositories[index].owner!.avatarUrl.toString(),
-        ),
-      ),
+      itemBuilder: (context, index) => _buildCard(_searchedRepositories[index]),
     );
   }
 
@@ -134,15 +108,33 @@ class _GetAllRepositoryScreenListViewState
       shrinkWrap: true,
       itemCount: getAllRepositoryModel.length,
       physics: const AlwaysScrollableScrollPhysics(),
-      itemBuilder: (context, index) => Padding(
-        padding: const EdgeInsets.all(5.0),
-        child: CardInformation(
-          language: getAllRepositoryModel[index].language.toString(),
-          name: getAllRepositoryModel[index].name.toString(),
-          image: getAllRepositoryModel[index].owner!.avatarUrl.toString(),
-        ),
+      itemBuilder: (context, index) => _buildCard(getAllRepositoryModel[index]),
+    );
+  }
+
+  Widget _buildCard(Items item) {
+    return Padding(
+      padding: const EdgeInsets.all(5.0),
+      child: CardInformation(
+        language: item.language.toString(),
+        name: item.name.toString(),
+        image: item.owner!.avatarUrl.toString(),
       ),
     );
+  }
+
+  void _onSearchChanged(String value) {
+    setState(() {
+      _searchedRepositories = context.read<GetAllRepositoryCubit>().state.maybeWhen(
+        success: (repositories) => repositories.items
+            ?.where((repository) =>
+        repository.name!.toLowerCase().contains(value.toLowerCase()) ||
+            repository.language != null &&
+                repository.language!.toLowerCase().contains(value.toLowerCase()))
+            .toList(),
+        orElse: () => [],
+      )!;
+    });
   }
 
   void _selectDate() async {
@@ -169,5 +161,4 @@ class _GetAllRepositoryScreenListViewState
       });
     }
   }
-
 }
